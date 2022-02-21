@@ -1,12 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-import CsvToHTML from './pages/CsvToHTML';
+import App from './pages/App';
 import reportWebVitals from './reportWebVitals';
 
 ReactDOM.render(
     <React.StrictMode>
-        <CsvToHTML />
+        <App />
     </React.StrictMode>,
     document.getElementById('root')
 );
