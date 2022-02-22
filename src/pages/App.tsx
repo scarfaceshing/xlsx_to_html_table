@@ -38,10 +38,23 @@ export default class App extends Component<IProps, IState> {
             .replace(/data-t=".*?"/gms, '')
             .replace(/xml:space=".*?"/gms, '')
             .replace(/id=".*?"/gms, '')
-            .replace(/   /gms, ' ')
-            .replace(/ >/gms, '>')
-            .replace(/<tr><\/tr>/gms, '')
             .replace(/<td><\/td>/gms, '')
+            .trim()
+
+        // Variables
+
+        let scores = final.match(/:score.*?:/gms)
+        let comments = final.match(/:comment.*?:/gms)
+
+        if (scores && comments) {
+            scores.forEach((item: any) => {
+                final = final.replace(`${item}`, `{{ ${item.replace(':', '')}::form:numeric }}`)
+            })
+
+            comments.forEach((item: any) => {
+                final = final.replace(`${item}`, `{{ ${item.replace(':', '')}::form:textarea }}`)
+            })
+        }
 
         return Pretty(final);
     }
