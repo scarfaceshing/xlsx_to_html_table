@@ -110,30 +110,25 @@ export default class App extends Component<IProps, IState> {
 
                             if (row == 0) {
                                 table_output += '\t\t<th>' + sheet_data[row][cell] + '</th>\n'
-                            } else {
-                                table_output += '\t\t<td>' + sheet_data[row][cell] + '</td>\n'
                             }
-                        } else {
-                            is_null = true
-                            rowSpanCount++
                         }
+
+                        table_output += '\t</tr>'
+
                     }
 
-                    table_output += '\t</tr>'
+                    table_output += '</table>'
 
+                    this.setState({ htmlPreview: table_output })
+                    this.myRef.current.innerHTML = table_output
                 }
 
-                table_output += '</table>'
+                // this.trimmer(Sheets);
+            };
 
-                this.setState({ htmlPreview: table_output })
-                this.myRef.current.innerHTML = table_output
-            }
-
-            // this.trimmer(Sheets);
-        };
-
-        // if (rABS) reader.readAsBinaryString(file);
-        // else reader.readAsArrayBuffer(file);
+            // if (rABS) reader.readAsBinaryString(file);
+            // else reader.readAsArrayBuffer(file);
+        }
     }
 
     render() {
