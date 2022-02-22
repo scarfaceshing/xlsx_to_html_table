@@ -1,6 +1,7 @@
 import React, { Component, createRef } from 'react'
-import * as XLSX from 'xlsx';
+import * as XLSX from 'xlsx'
 import './App.css'
+import Pretty from 'pretty'
 
 interface IProps {
     myRef?: any;
@@ -27,58 +28,22 @@ export default class App extends Component<IProps, IState> {
         this.myRef = React.createRef<any>();
     }
 
-    writeExcel = () => {
-        // XLSX.writeFile({
-        //     SheetNames: ["Sheet1"],
-        //     Sheets: {
-        //         Sheet1: {
-        //             "!ref": "A1:B2",
-        //             A1: { t: 's', v: "A1:A2" },
-        //             B1: { t: 'n', v: 1 },
-        //             B2: { t: 'b', v: true },
-        //             "!merges": [
-        //                 { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } }, /* A1:A2 */
-        //                 { s: { r: 0, c: 1 }, e: { r: 1, c: 1 } } /* B1:B2 */
-        //             ]
-        //         }
-        //     }
-        // }, 'testingers.xlsx');
-
-        // let data = [{
-        //     firstName: 'John',
-        //     lastName: 'Doe'
-        // }, {
-        //     firstName: 'Smith',
-        //     lastName: 'Peters'
-        // }, {
-        //     firstName: 'Alice',
-        //     lastName: 'Lee'
-        // }]
-        // const ws = XLSX.utils.json_to_sheet(data)
-        // const wb = XLSX.utils.book_new()
-        // XLSX.utils.book_append_sheet(wb, ws, 'Responses')
-        // XLSX.writeFile(wb, 'sampleData.export.xlsx')
-    }
-
     componentDidMount = () => {
         this.writeExcel();
     }
 
-    trimmer = (sheet: any) => {
-        let data: any = [];
-        let option: any = [];
+    trimmer = (data: any) => {
+        let final = data;
+        final = data.replace(/data-v=".*?"/gms, '')
+            .replace(/data-t=".*?"/gms, '')
+            .replace(/xml:space=".*?"/gms, '')
+            .replace(/id=".*?"/gms, '')
+            .replace(/   /gms, ' ')
+            .replace(/ >/gms, '>')
+            .replace(/<tr><\/tr>/gms, '')
+            .replace(/<td><\/td>/gms, '')
 
-        /* Object.keys(sheet).forEach((key: any, index: number) => {
-            if ((key) && key !== '!merges' && key !== '!ref') {
-                data.push({ [key]: sheet[key] });
-            } else {
-                option.push({ [key]: sheet[key] });
-            }
-        })
-        */
-
-        // this.setState({ cell: data })
-        console.log(sheet)
+        return Pretty(final);
     }
 
     DisplayTable = (props: any) => {
@@ -93,24 +58,23 @@ export default class App extends Component<IProps, IState> {
         const reader: any = new FileReader()
         const file = event.target.files[0]
         const rABS = !!reader.readAsBinaryString
+        const vm: any = this;
 
         reader.readAsArrayBuffer(file)
 
         reader.onload = (e: any) => {
 
             const data = new Uint8Array(reader.result)
-            // const work_book = XLSX.read(data, { type: rABS ? "binary" : "array" });
             const work_book = XLSX.read(data, { type: 'array' })
             const sheet_name = work_book.SheetNames
-            const sheet_data: any = XLSX.utils.sheet_to_json(work_book.Sheets[sheet_name[0]], { header: 1 })
+            const sheet_data = work_book.Sheets[sheet_name[0]]
+            const html_data = XLSX.utils.sheet_to_html(sheet_data)
+            const final = this.trimmer(html_data);
 
-
-
-            // this.trimmer(Sheets);
+            vm.setState({ htmlPreview: final })
+            vm.myRef.current.innerHTML = final;
+            console.log(final);
         };
-
-        // if (rABS) reader.readAsBinaryString(file);
-        // else reader.readAsArrayBuffer(file);
     }
 
     render() {
@@ -119,7 +83,11 @@ export default class App extends Component<IProps, IState> {
                 <input type="file" accept="xlsx, csv" onChange={this.handleChange} />
                 <br />
                 <br />
-                <pre ref={this.myRef}></pre>
+                <pre>
+                    {this.state.htmlPreview}
+                </pre>
+                <br />
+                <div ref={this.myRef}></div>
             </>
         )
     }
