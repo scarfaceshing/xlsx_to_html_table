@@ -29,7 +29,7 @@ export default class App extends Component<IProps, IState> {
     }
 
     componentDidMount = () => {
-        this.writeExcel();
+
     }
 
     trimmer = (data: any) => {
