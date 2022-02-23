@@ -43,18 +43,27 @@ export default class App extends Component<IProps, IState> {
 
         // Variables
 
-        let scores = final.match(/:score.*?:/gms)
+        console.log(final);
+
+        let evaluation = final.match(/{{ .*? }}/gms)
         let comments = final.match(/:comment.*?:/gms)
+
+        if ((evaluation) && evaluation.length > 0) {
+            final = final.replace(/\{\{(.*?)\}\}/gms, '{{ eval::$1::::return$1 }}');
+            final = final.replace(/score(.[0-9]*)/gms, '[[score$1]]');
+        }
+
+        let scores = final.match(/:\[\[score.*?\]\]:/gms)
 
         if ((scores) && scores.length > 0) {
             scores.forEach((item: any) => {
-                final = final.replace(`${item}`, `{{ ${item.replace(':', '')}::form:numeric }}`)
+                final = final.replace(`${item}`, `{{ ${item.replace(/:\[\[(.*?)\]\]:/, '$1')}:form::numeric }}`)
             })
         }
 
         if ((comments) && comments.length > 0) {
             comments.forEach((item: any) => {
-                final = final.replace(`${item}`, `{{ ${item.replace(':', '')}::form:textarea }}`)
+                final = final.replace(`${item}`, `{{ ${item.replace(':', '')}:form::textarea }}`)
             })
         }
 
