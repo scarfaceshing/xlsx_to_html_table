@@ -43,16 +43,18 @@ export default class App extends Component<IProps, IState> {
 
         // Variables
 
-        let scores = final.match(/:score.*?:/gms)
-        let comments = final.match(/:comment.*?:/gms)
+        let scores = final.match(/:score(.*?):/gms)
+        let comments = final.match(/:comment(.*?):/gms)
 
-        if (scores && comments) {
+        if (((scores) && scores.length > 0)) {
             scores.forEach((item: any) => {
-                final = final.replace(`${item}`, `{{ ${item.replace(':', '')}::form:numeric }}`)
+                final = final.replace(`${item}`, `{{ ${item.replace(':', '')}:form::numeric }}`)
             })
+        }
 
+        if ((comments) && comments.length > 0) {
             comments.forEach((item: any) => {
-                final = final.replace(`${item}`, `{{ ${item.replace(':', '')}::form:textarea }}`)
+                final = final.replace(`${item}`, `{{ ${item.replace(':', '')}:form::textarea }}`)
             })
         }
 
@@ -86,7 +88,7 @@ export default class App extends Component<IProps, IState> {
 
             vm.setState({ htmlPreview: final })
             vm.myRef.current.innerHTML = final;
-            console.log(final);
+            // console.log(final);
         };
     }
 
