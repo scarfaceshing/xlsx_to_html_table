@@ -46,11 +46,13 @@ export default class App extends Component<IProps, IState> {
         let scores = final.match(/:score.*?:/gms)
         let comments = final.match(/:comment.*?:/gms)
 
-        if (scores && comments) {
+        if ((scores) && scores.length > 0) {
             scores.forEach((item: any) => {
                 final = final.replace(`${item}`, `{{ ${item.replace(':', '')}::form:numeric }}`)
             })
+        }
 
+        if ((comments) && comments.length > 0) {
             comments.forEach((item: any) => {
                 final = final.replace(`${item}`, `{{ ${item.replace(':', '')}::form:textarea }}`)
             })
