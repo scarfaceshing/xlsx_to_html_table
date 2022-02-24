@@ -41,9 +41,23 @@ export default class App extends Component<IProps, IState> {
             .replace(/<td><\/td>/gms, '')
             .trim()
 
-        // Variables
+        final = final.replace(/.*?<table>/gms, '<table>')
+        final = final.replace(/<\/table>.*/gms, '</table>')
 
-        console.log(final);
+        let firstRow = final.match(/<tr.*?tr>/ms)
+        firstRow = firstRow[0].match(/<td.*?>(.*?)<\/td>/gms)
+
+        firstRow.forEach((item: any, index: number) => {
+            firstRow[index] = item.replace(/<td\s(.*?)\s>/gms, '<td>')
+        });
+
+        console.log(firstRow);
+
+        /* final = final.replace(/<br.*?\/>/gms, '<br/>\n');
+        final = final.replace(/<td.*?><br.*?\/>/gms, '<td>')
+
+        console.log(Pretty(final))
+
 
         let evaluation = final.match(/{{ .*? }}/gms)
         let comments = final.match(/:comment.*?:/gms)
@@ -66,7 +80,7 @@ export default class App extends Component<IProps, IState> {
                 final = final.replace(`${item}`, `{{ ${item.replace(':', '')}:form::textarea }}`)
             })
         }
-
+ */
         return Pretty(final);
     }
 
@@ -97,7 +111,7 @@ export default class App extends Component<IProps, IState> {
 
             vm.setState({ htmlPreview: final })
             vm.myRef.current.innerHTML = final;
-            // console.log(final);
+            console.log(final);
         };
     }
 
