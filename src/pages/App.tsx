@@ -32,6 +32,28 @@ export default class App extends Component<IProps, IState> {
 
     }
 
+    setTheader = (data: any) => {
+        let result = '';
+        let firstRow = data.match(/<tr.*?tr>/ms)
+
+        firstRow = firstRow[0].match(/<td.*?>(.*?)<\/td>/gms)
+
+        firstRow.forEach((item: any, index: number) => {
+            firstRow[index] = item.replace(/<td\s(colspan\W+\d+\W)>(.*?)<\/td>/gms, '<td$1>$2</td>')
+            firstRow[index] = firstRow[index].replace(/<td\s(rowspan\W+\d+\W)>(.*?)<\/td>/gms, '<td$1>$2</td>')
+            firstRow[index] = firstRow[index].replace(/<td(.*?)>(.*?)<\/td>/gms, '<th$1>$2</th>')
+            firstRow[index] = firstRow[index].replace(/<th(.*?)(\s+)>(.*?)<\/th>/gms, '<th$1>$3</th>')
+            result += firstRow[index]
+        });
+
+        result = result.replace(/^(.*?)/, '<thead>$1')
+        result = result.replace(/(.*?)$/, '$1</thead><tbody>')
+        result = data.replace(/<tr.*?tr>/ms, result)
+        result = result.replace(/<tbody>(.*)/, '<tbody>$1</tbody>')
+
+        return result
+    }
+
     trimmer = (data: any) => {
         let final = data;
         final = data.replace(/data-v=".*?"/gms, '')
@@ -44,43 +66,12 @@ export default class App extends Component<IProps, IState> {
         final = final.replace(/.*?<table>/gms, '<table>')
         final = final.replace(/<\/table>.*/gms, '</table>')
 
-        let firstRow = final.match(/<tr.*?tr>/ms)
-        firstRow = firstRow[0].match(/<td.*?>(.*?)<\/td>/gms)
+        final = this.setTheader(final)
 
-        firstRow.forEach((item: any, index: number) => {
-            firstRow[index] = item.replace(/<td\s(.*?)\s>/gms, '<td>')
-        });
+        // test = test.replace(/^/, );
 
-        console.log(firstRow);
+        // final = final.replace(/<tr>.*?<\/tr>/ms, '')
 
-        /* final = final.replace(/<br.*?\/>/gms, '<br/>\n');
-        final = final.replace(/<td.*?><br.*?\/>/gms, '<td>')
-
-        console.log(Pretty(final))
-
-
-        let evaluation = final.match(/{{ .*? }}/gms)
-        let comments = final.match(/:comment.*?:/gms)
-
-        if ((evaluation) && evaluation.length > 0) {
-            final = final.replace(/\{\{(.*?)\}\}/gms, '{{ eval::$1::::return$1 }}');
-            final = final.replace(/score(.[0-9]*)/gms, '[[score$1]]');
-        }
-
-        let scores = final.match(/:\[\[score.*?\]\]:/gms)
-
-        if ((scores) && scores.length > 0) {
-            scores.forEach((item: any) => {
-                final = final.replace(`${item}`, `{{ ${item.replace(/:\[\[(.*?)\]\]:/, '$1')}:form::numeric }}`)
-            })
-        }
-
-        if ((comments) && comments.length > 0) {
-            comments.forEach((item: any) => {
-                final = final.replace(`${item}`, `{{ ${item.replace(':', '')}:form::textarea }}`)
-            })
-        }
- */
         return Pretty(final);
     }
 
@@ -111,7 +102,7 @@ export default class App extends Component<IProps, IState> {
 
             vm.setState({ htmlPreview: final })
             vm.myRef.current.innerHTML = final;
-            console.log(final);
+            // console.log(final);
         };
     }
 
