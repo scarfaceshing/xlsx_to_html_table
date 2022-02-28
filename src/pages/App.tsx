@@ -8,10 +8,15 @@ interface IProps {
 }
 
 interface IState {
+    title?: string;
     guide?: any;
     cell?: any;
     htmlPreview?: any;
 }
+
+const TEMPLATE_ID = 'OPERATIONS_COLLECTIONS_SUPPORT'
+const DEPARTMENT_ID = 'OPERATIONS'
+const KPI_TITLE = 'Operations - Collections Support'
 
 export default class App extends Component<IProps, IState> {
     private myRef;
@@ -20,6 +25,7 @@ export default class App extends Component<IProps, IState> {
         super(props);
 
         this.state = {
+            title: '',
             guide: [],
             cell: [],
             htmlPreview: ''
@@ -49,7 +55,43 @@ export default class App extends Component<IProps, IState> {
         result = result.replace(/^(.*?)/, '<thead>$1')
         result = result.replace(/(.*?)$/, '$1</thead><tbody>')
         result = data.replace(/<tr.*?tr>/ms, result)
-        result = result.replace(/<tbody>(.*)/, '<tbody>$1</tbody>')
+
+        result = result.replace(/<tbody>(.*?)<\/table>/, '<tbody>$1</tbody></table>')
+
+        return result
+    }
+
+    setVariable = (data: any) => {
+        let final = data;
+
+        let evaluation = final.match(/{{ .*? }}/gms)
+        let comments = final.match(/:comment.*?:/gms)
+
+        if ((evaluation) && evaluation.length > 0) {
+            final = final.replace(/\{\{(.*?)\}\}/gms, '{{ eval::$1::::return$1 }}');
+            final = final.replace(/score(.[0-9]*)/gms, '[[score$1]]');
+        }
+
+        let scores = final.match(/:\[\[score.*?\]\]:/gms)
+
+        if ((scores) && scores.length > 0) {
+            scores.forEach((item: any) => {
+                final = final.replace(`${item}`, `{{ ${item.replace(/:\[\[(.*?)\]\]:/, '$1')}:form::numeric }}`)
+            })
+        }
+
+        if ((comments) && comments.length > 0) {
+            comments.forEach((item: any) => {
+                final = final.replace(`${item}`, `{{ ${item.replace(':', '')}:form::textarea }}`)
+            })
+        }
+
+        return final
+    }
+
+    setBreakline = (data: any) => {
+        let result = ''
+        result = data.replace(/(.*?)<br.*?\/>/gms, '\n$1<br\/>')
 
         return result
     }
@@ -67,10 +109,8 @@ export default class App extends Component<IProps, IState> {
         final = final.replace(/<\/table>.*/gms, '</table>')
 
         final = this.setTheader(final)
-
-        // test = test.replace(/^/, );
-
-        // final = final.replace(/<tr>.*?<\/tr>/ms, '')
+        final = this.setBreakline(final)
+        final = this.setVariable(final)
 
         return Pretty(final);
     }
@@ -106,14 +146,60 @@ export default class App extends Component<IProps, IState> {
         };
     }
 
+    handleInput = (event: any) => {
+        const name = event.currentTarget.name;
+        const value = event.currentTarget.value;
+        this.setState({ [name]: value })
+    }
+
     render() {
         return (
             <>
+                <div>
+                    <input type="text" onChange={this.handleInput} name="title" />
+                </div>
+                <br />
                 <input type="file" accept="xlsx, csv" onChange={this.handleChange} />
                 <br />
                 <br />
                 <pre>
+                    {`
+<?php
+
+declare(strict_types=1);
+
+use App\\Models\\Lookups\\Department;
+use App\\Models\\Lookups\\KeyPerformanceIndicatorTemplate;
+use Illuminate\\Database\\Migrations\\Migration;
+
+class ${this.state.title} extends Migration
+{
+    private const KPI_TEMPLATE = '`}
+                </pre>
+                <pre>
                     {this.state.htmlPreview}
+                </pre>
+                <pre>
+                    {`
+';
+
+    public function up()
+    {
+        KeyPerformanceIndicatorTemplate::create([
+            'id' => KeyPerformanceIndicatorTemplate::${TEMPLATE_ID},
+            'content' => self::KPI_TEMPLATE,
+            'template_name' => ${KPI_TITLE},
+            'department_id' => Department::${DEPARTMENT_ID},
+        ]);
+    }
+
+    public function down()
+    {
+        KeyPerformanceIndicatorTemplate::findOrFail(KeyPerformanceIndicatorTemplate::${TEMPLATE_ID})
+            ->delete();
+    }
+}
+                    `}
                 </pre>
                 <br />
                 <div ref={this.myRef}></div>
