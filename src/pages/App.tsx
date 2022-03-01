@@ -44,6 +44,8 @@ export default class App extends Component<IProps, IState> {
 
         firstRow = firstRow[0].match(/<td.*?>(.*?)<\/td>/gms)
 
+        result += '<tr>'
+
         firstRow.forEach((item: any, index: number) => {
             firstRow[index] = item.replace(/<td\s(colspan\W+\d+\W)>(.*?)<\/td>/gms, '<td$1>$2</td>')
             firstRow[index] = firstRow[index].replace(/<td\s(rowspan\W+\d+\W)>(.*?)<\/td>/gms, '<td$1>$2</td>')
@@ -51,6 +53,8 @@ export default class App extends Component<IProps, IState> {
             firstRow[index] = firstRow[index].replace(/<th(.*?)(\s+)>(.*?)<\/th>/gms, '<th$1>$3</th>')
             result += firstRow[index]
         });
+
+        result += '</tr>'
 
         result = result.replace(/^(.*?)/, '<thead>$1')
         result = result.replace(/(.*?)$/, '$1</thead><tbody>')
