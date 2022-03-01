@@ -14,9 +14,9 @@ interface IState {
     htmlPreview?: any;
 }
 
-const TEMPLATE_ID = 'OPERATIONS_COLLECTIONS_SUPPORT'
-const DEPARTMENT_ID = 'OPERATIONS'
-const KPI_TITLE = 'Operations - Collections Support'
+const TEMPLATE_ID = 'ADMIN_VENDOR_MANAGEMENT'
+const DEPARTMENT_ID = 'ADMIN_FACILITES_PROCUREMENT'
+const KPI_TITLE = 'Admin - Vendor Manangement'
 
 export default class App extends Component<IProps, IState> {
     private myRef;
@@ -76,7 +76,7 @@ export default class App extends Component<IProps, IState> {
 
         if ((scores) && scores.length > 0) {
             scores.forEach((item: any) => {
-                final = final.replace(`${item}`, `{{ ${item.replace(/:\[\[(.*?)\]\]:/, '$1')}:form::numeric }}`)
+                final = final.replace(`${item}`, `{{ ${item.replace(/:\[\[(.*?)\]\]:/, '$1')}::form::numeric }}`)
             })
         }
 
