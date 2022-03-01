@@ -174,14 +174,14 @@ use Illuminate\\Database\\Migrations\\Migration;
 
 class ${this.state.title} extends Migration
 {
-    private const KPI_TEMPLATE = '`}
+    private const KPI_TEMPLATE = <<<HTML`}
                 </pre>
                 <pre>
                     {this.state.htmlPreview}
                 </pre>
                 <pre>
                     {`
-';
+HTML;
 
     public function up()
     {
