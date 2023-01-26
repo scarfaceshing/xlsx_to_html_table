@@ -5,6 +5,7 @@ import Pretty from 'pretty'
 
 interface IProps {
     myRef?: any;
+    debugRef?: any;
 }
 
 interface IState {
@@ -12,6 +13,7 @@ interface IState {
     guide?: any;
     cell?: any;
     htmlPreview?: any;
+    debugData?: any;
 }
 
 const TEMPLATE_ID = 'ADMIN_VENDOR_MANAGEMENT'
@@ -20,6 +22,7 @@ const KPI_TITLE = 'Admin - Vendor Manangement'
 
 export default class App extends Component<IProps, IState> {
     private myRef;
+    private debugRef;
 
     constructor(props: IProps) {
         super(props);
@@ -28,14 +31,63 @@ export default class App extends Component<IProps, IState> {
             title: '',
             guide: [],
             cell: [],
-            htmlPreview: ''
+            htmlPreview: '',
+            debugData: null
         }
 
         this.myRef = React.createRef<any>();
+        this.debugRef = React.createRef<any>();
+    }
+
+    showDebug = (data: any) => {
+
     }
 
     componentDidMount = () => {
 
+    }
+
+    // Preparation of data to the process
+    preparation = (response: any) => {
+        const data = new Uint8Array(response.result)
+        const work_book = XLSX.read(data, { type: 'array' })
+        const sheet_name = work_book.SheetNames
+        const sheet_data = work_book.Sheets[sheet_name[0]]
+        const html_data = XLSX.utils.sheet_to_html(sheet_data)
+        const fmla = XLSX.utils.sheet_to_formulae(sheet_data)
+
+        console.log(sheet_data);
+        this.processExcel(html_data);
+    }
+
+    // Processing of data
+    processExcel = (excelData: any) => {
+        // excelData = excelData.replace(/data-v=".*?"/gms, '')
+        //     .replace(/data-t=".*?"/gms, '')
+        //     .replace(/xml:space=".*?"/gms, '')
+        //     .replace(/id=".*?"/gms, '')
+        //     .replace(/<td><\/td>/gms, '')
+        //     .trim()
+
+        excelData = excelData.replace(/.*?<table>/gms, '<table>')
+        excelData = excelData.replace(/<\/table>.*/gms, '</table>')
+
+        excelData = this.setTheader(excelData)
+        // excelData = this.setBreakline(excelData)
+        // excelData = this.setVariable(excelData)
+
+        excelData = Pretty(excelData);
+
+        this.outputDisplay(excelData);
+    }
+
+    outputDisplay = (htmlData: string) => {
+        // this.setState({ htmlPreview: htmlData })
+        // this.myRef.current.innerHTML = htmlData;
+
+        this.setState({ debugData: htmlData });
+        this.debugRef.current.innerHTML = htmlData;
+        // console.log(final);
     }
 
     setTheader = (data: any) => {
@@ -65,58 +117,39 @@ export default class App extends Component<IProps, IState> {
         return result
     }
 
-    setVariable = (data: any) => {
-        let final = data;
+    // setVariable = (data: any) => {
+    //     let final = data;
 
-        let evaluation = final.match(/{{ .*? }}/gms)
-        let comments = final.match(/:comment.*?:/gms)
+    //     let evaluation = final.match(/{{ .*? }}/gms)
+    //     let comments = final.match(/:comment.*?:/gms)
 
-        if ((evaluation) && evaluation.length > 0) {
-            final = final.replace(/\{\{(.*?)\}\}/gms, '{{ eval::$1::::return$1 }}');
-            final = final.replace(/score(.[0-9]*)/gms, '[[score$1]]');
-        }
+    //     if ((evaluation) && evaluation.length > 0) {
+    //         final = final.replace(/\{\{(.*?)\}\}/gms, '{{ eval::$1::::return$1 }}');
+    //         final = final.replace(/score(.[0-9]*)/gms, '[[score$1]]');
+    //     }
 
-        let scores = final.match(/:\[\[score.*?\]\]:/gms)
+        // let scores = final.match(/:\[\[score.*?\]\]:/gms)
 
-        if ((scores) && scores.length > 0) {
-            scores.forEach((item: any) => {
-                final = final.replace(`${item}`, `{{ ${item.replace(/:\[\[(.*?)\]\]:/, '$1')}::form::numeric }}`)
-            })
-        }
+    //     if ((scores) && scores.length > 0) {
+    //         scores.forEach((item: any) => {
+    //             final = final.replace(`${item}`, `{{ ${item.replace(/:\[\[(.*?)\]\]:/, '$1')}::form::numeric }}`)
+    //         })
+    //     }
 
-        if ((comments) && comments.length > 0) {
-            comments.forEach((item: any) => {
-                final = final.replace(`${item}`, `{{ ${item.replace(':', '')}:form::textarea }}`)
-            })
-        }
+    //     if ((comments) && comments.length > 0) {
+    //         comments.forEach((item: any) => {
+    //             final = final.replace(`${item}`, `{{ ${item.replace(':', '')}:form::textarea }}`)
+    //         })
+    //     }
 
-        return final
-    }
+    //     return final
+    // }
 
     setBreakline = (data: any) => {
         let result = ''
         result = data.replace(/(.*?)<br.*?\/>/gms, '\n$1<br\/>')
 
         return result
-    }
-
-    trimmer = (data: any) => {
-        let final = data;
-        final = data.replace(/data-v=".*?"/gms, '')
-            .replace(/data-t=".*?"/gms, '')
-            .replace(/xml:space=".*?"/gms, '')
-            .replace(/id=".*?"/gms, '')
-            .replace(/<td><\/td>/gms, '')
-            .trim()
-
-        final = final.replace(/.*?<table>/gms, '<table>')
-        final = final.replace(/<\/table>.*/gms, '</table>')
-
-        final = this.setTheader(final)
-        final = this.setBreakline(final)
-        final = this.setVariable(final)
-
-        return Pretty(final);
     }
 
     DisplayTable = (props: any) => {
@@ -131,22 +164,11 @@ export default class App extends Component<IProps, IState> {
         const reader: any = new FileReader()
         const file = event.target.files[0]
         const rABS = !!reader.readAsBinaryString
-        const vm: any = this;
 
         reader.readAsArrayBuffer(file)
 
         reader.onload = (e: any) => {
-
-            const data = new Uint8Array(reader.result)
-            const work_book = XLSX.read(data, { type: 'array' })
-            const sheet_name = work_book.SheetNames
-            const sheet_data = work_book.Sheets[sheet_name[0]]
-            const html_data = XLSX.utils.sheet_to_html(sheet_data)
-            const final = this.trimmer(html_data);
-
-            vm.setState({ htmlPreview: final })
-            vm.myRef.current.innerHTML = final;
-            // console.log(final);
+            this.preparation(reader);
         };
     }
 
@@ -159,54 +181,63 @@ export default class App extends Component<IProps, IState> {
     render() {
         return (
             <>
-                <div>
-                    <input type="text" onChange={this.handleInput} name="title" />
+            <div style={{ width: "100%", display: "flex" }}>
+                <div style={{ flex: "49.5%" }}>
+                    <div>
+                        <input type="text" onChange={this.handleInput} name="title" />
+                    </div>
+                    <br />
+                    <input type="file" accept="xlsx, csv" onChange={this.handleChange} />
+                    <br />
+                    <br />
+                    {/* <pre>
+                        {`
+                            <?php
+
+                            declare(strict_types=1);
+
+                            use App\\Models\\Lookups\\Department;
+                            use App\\Models\\Lookups\\KeyPerformanceIndicatorTemplate;
+                            use Illuminate\\Database\\Migrations\\Migration;
+
+                            class ${this.state.title} extends Migration
+                            {
+                                private const KPI_TEMPLATE = <<<HTML`}
+                                            </pre>
+                                            <pre>
+                                                {this.state.htmlPreview}
+                                            </pre>
+                                            <pre>
+                                                {`
+                            HTML;
+
+                                public function up()
+                                {
+                                    KeyPerformanceIndicatorTemplate::create([
+                                        'id' => KeyPerformanceIndicatorTemplate::${TEMPLATE_ID},
+                                        'content' => self::KPI_TEMPLATE,
+                                        'template_name' => ${KPI_TITLE},
+                                        'department_id' => Department::${DEPARTMENT_ID},
+                                    ]);
+                                }
+
+                                public function down()
+                                {
+                                    KeyPerformanceIndicatorTemplate::findOrFail(KeyPerformanceIndicatorTemplate::${TEMPLATE_ID})
+                                        ->delete();
+                                }
+                            }
+                        `}
+                    </pre>
+                    <br />
+                    <div ref={this.myRef}></div> */}
                 </div>
-                <br />
-                <input type="file" accept="xlsx, csv" onChange={this.handleChange} />
-                <br />
-                <br />
-                <pre>
-                    {`
-<?php
-
-declare(strict_types=1);
-
-use App\\Models\\Lookups\\Department;
-use App\\Models\\Lookups\\KeyPerformanceIndicatorTemplate;
-use Illuminate\\Database\\Migrations\\Migration;
-
-class ${this.state.title} extends Migration
-{
-    private const KPI_TEMPLATE = <<<HTML`}
-                </pre>
-                <pre>
-                    {this.state.htmlPreview}
-                </pre>
-                <pre>
-                    {`
-HTML;
-
-    public function up()
-    {
-        KeyPerformanceIndicatorTemplate::create([
-            'id' => KeyPerformanceIndicatorTemplate::${TEMPLATE_ID},
-            'content' => self::KPI_TEMPLATE,
-            'template_name' => ${KPI_TITLE},
-            'department_id' => Department::${DEPARTMENT_ID},
-        ]);
-    }
-
-    public function down()
-    {
-        KeyPerformanceIndicatorTemplate::findOrFail(KeyPerformanceIndicatorTemplate::${TEMPLATE_ID})
-            ->delete();
-    }
-}
-                    `}
-                </pre>
-                <br />
-                <div ref={this.myRef}></div>
+                <div style={{ flex: "49.5%" }}>
+                    <h1>Debug side</h1><br />
+                    <pre>{this.state.debugData}</pre>
+                    <div ref={this.debugRef}></div>
+                </div>
+            </div>
             </>
         )
     }
